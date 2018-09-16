@@ -35,18 +35,23 @@ namespace MiFirm
                 new WatchModels() { WatchName = "Amazfit Cor", FirmwareFiles = { "Mili_tempo.fw", "Mili_tempo.res" } }
             };
 
-            // Give the user the option to specify a pre-downloaded APK file, or to download the latest version from APKMirror
+            // Give the user the option to specify a pre-downloaded APK file, or to download the latest version from APKMirror manually
             char responce = new char();
             while (!(responce.Equals('1') || responce.Equals('2')))
             {
-                responce = PromptFile();
+                Console.Clear();
+                Console.WriteLine("Please specify one of the following options to begin the firmware extraction:");
+                Console.WriteLine("1. Open APKMirror (Download)");
+                Console.WriteLine("2. Specify file   (Pre-downloaded)");
+                Console.WriteLine();
+                responce = Console.ReadKey().KeyChar;
             }
 
-            // If required, open the latest APKMirror link
+            // If the user selected the APKMirror option, fetch the latest version URL and then open it using their default browser
             if (responce.Equals('1'))
             {
                 Console.WriteLine();
-                Console.WriteLine("Opening APKMirror link, standby...");
+                Console.WriteLine("Opening APKMirror, standby...");
                 try
                 {
                     string rssURL = "https://www.apkmirror.com/apk/anhui-huami-information-technology-co-ltd/mi-fit/feed/";
@@ -63,7 +68,7 @@ namespace MiFirm
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Failed to open APKMirror link!" + Environment.NewLine + "Error: {0}", e);
+                    Console.WriteLine("Failed to open APKMirror!" + Environment.NewLine + "Error: {0}", e);
                     Console.WriteLine("Press any key to exit.");
                     Console.ReadKey();
                     Environment.Exit(1);
@@ -71,12 +76,12 @@ namespace MiFirm
                 Thread.Sleep(3000);
             }
 
-            // Prompt the user for the path to the APK file
+            // No matter what the users choice was, prompt them for the full path to the APK file
             Console.Clear();
             Console.WriteLine("Please enter the full path of the APK file you would like to extract:");
             string apkPath = Console.ReadLine();
 
-            // Take the previously given path, and check to ensure that the APK file looks valid 
+            // Do some basic checks in order to ensure that the APK file actually exists and is a logical file size
             try
             {
                 if (!File.Exists(apkPath) || new FileInfo(apkPath).Length < ushort.MaxValue || !Path.GetExtension(apkPath).ToLower().Equals(".apk"))
@@ -100,7 +105,7 @@ namespace MiFirm
             char selectedResponce = new char();
             while (!isValid)
             {
-                Console.WriteLine(Environment.NewLine);
+                Console.Clear();
                 Console.WriteLine("Which of the following devices would you wish to extract firmware for?");
                 for (int i = 0; i <= miWatches.Count - 1; i++)
                 {
@@ -114,19 +119,36 @@ namespace MiFirm
                 }
             }
 
-            // Finally, load the APK and extract only the required firmware files to a named folder
-            Directory.CreateDirectory(Path.Combine("Firmware Files", miWatches[int.Parse(selectedResponce.ToString()) - 1].WatchName));
-            using (ZipArchive archive = ZipFile.OpenRead(apkPath))
+            // Finally, extract the firmware file(s) based on the previously selected device
+            Console.Clear();
+            Console.WriteLine("Begining to extract firmware for {0}...", miWatches[int.Parse(selectedResponce.ToString()) - 1].WatchName);
+            try
             {
-                foreach (var firmwareList in miWatches[int.Parse(selectedResponce.ToString()) - 1].FirmwareFiles)
+                Directory.CreateDirectory(Path.Combine("Firmware Files", miWatches[int.Parse(selectedResponce.ToString()) - 1].WatchName));
+                using (ZipArchive archive = ZipFile.OpenRead(apkPath))
                 {
-                    string destinationPath = Path.GetFullPath(Path.Combine("Firmware Files", miWatches[int.Parse(selectedResponce.ToString()) - 1].WatchName, firmwareList));
-                    var test = archive.Entries;
-                    archive.GetEntry("assets/" + firmwareList).ExtractToFile(destinationPath, true);
+                    foreach (var firmwareList in miWatches[int.Parse(selectedResponce.ToString()) - 1].FirmwareFiles)
+                    {
+                        string destinationPath = Path.GetFullPath(Path.Combine("Firmware Files", miWatches[int.Parse(selectedResponce.ToString()) - 1].WatchName, firmwareList));
+                        archive.GetEntry("assets/" + firmwareList).ExtractToFile(destinationPath, true);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failed to decompress APK file!" + Environment.NewLine + "Error: {0}", e);
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadKey();
+                Environment.Exit(1);
+            }
+            Console.WriteLine("Extraction complete! Please check the 'Firmware Files' directory, and look for your device name.");
+            Thread.Sleep(3000);
+            Environment.Exit(0);
         }
 
+        /// <summary>
+        /// A simple class which allows for the easy addition of watches and firmware files
+        /// </summary>
         public class WatchModels
         {
             public string WatchName;
@@ -135,17 +157,6 @@ namespace MiFirm
             {
                 FirmwareFiles = new List<string>();
             }
-        }
-
-        public static char PromptFile()
-        {
-            Console.Clear();
-            Console.WriteLine("Please select one of the following options of obtaining the Mi Fit APK:");
-            Console.WriteLine("1. Open APKMirror link");
-            Console.WriteLine("2. Specify pre-downloaded file");
-            Console.WriteLine();
-            char responce = Console.ReadKey().KeyChar;
-            return responce;
         }
     }
 }
