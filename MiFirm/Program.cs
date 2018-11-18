@@ -31,7 +31,7 @@ namespace MiFirm
                 new WatchModels() { WatchName = "Mi Band 2", FirmwareFiles = { "Mili_pro.ft.en" } },
                 new WatchModels() { WatchName = "Mi Band 3", FirmwareFiles = {"Mili_wuhan.fw", "Mili_wuhan.res" } },
                 new WatchModels() { WatchName = "Mi Band 3 (NFC)", FirmwareFiles = { "Mili_chongqing.fw", "Mili_chongqing.res" } },
-                new WatchModels() { WatchName = "Amazfit Bip", FirmwareFiles = { "Mili_chaohu.fw", "Mili_chaohu.res", "Mili_chaohu.gps" } },
+                new WatchModels() { WatchName = "Amazfit Bip", FirmwareFiles = { "Mili_chaohu.fw", "Mili_chaohu.res", "Mili_dth.gps" } },
                 new WatchModels() { WatchName = "Amazfit Cor", FirmwareFiles = { "Mili_tempo.fw", "Mili_tempo.res" } }
             };
 
@@ -60,7 +60,6 @@ namespace MiFirm
                         SyndicationFeed rssReader = SyndicationFeed.Load(xmlReader);
                         foreach (SyndicationItem item in rssReader.Items)
                         {
-                            Console.WriteLine(item.Id);
                             Process.Start(item.Id);
                             break;
                         }
@@ -78,7 +77,7 @@ namespace MiFirm
 
             // No matter what the users choice was, prompt them for the full path to the APK file
             Console.Clear();
-            Console.WriteLine("Please enter the full path of the APK file you would like to extract:");
+            Console.WriteLine("Please drag APK file onto the console window which you wish to extract:");
             string apkPath = Console.ReadLine();
 
             // Do some basic checks in order to ensure that the APK file actually exists and is a logical file size
